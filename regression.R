@@ -56,3 +56,31 @@ predict(model,nd)
 
 # добавляем на график линию регрессии
 qplot(data=d2,speed,dist) + stat_smooth(method="lm")
+
+#######################
+t <- swiss # встроенный набор данных по Швейцарии
+help(swiss)
+glimpse(t)
+describe(t)
+ggpairs(t) # все диаграммы рассеяния на одном графике
+
+# множественная регрессия
+model2 <- lm(data=t,
+             Fertility~Agriculture+Education+Catholic)
+coef(model2) # оценки бет
+fitted(model2) # прогнозы
+residuals(model2) # остатки
+deviance(model2) # RSS
+
+report <- summary(model2)
+report
+report$r.squared # R^2
+
+# второй способ расчета R^2
+cor(t$Fertility,fitted(model2))^2
+
+# создаем новый набор данных
+nd2 <- data.frame(Agriculture=0.5,Catholic=0.5,
+                  Education=20)
+# прогнозируем
+predict(model2,nd2)
