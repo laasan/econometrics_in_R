@@ -58,14 +58,15 @@ predict(model,nd)
 qplot(data=d2,speed,dist) + stat_smooth(method="lm")
 
 #######################
-t <- swiss # встроенный набор данных по Швейцарии
+#######################
+h <- swiss # встроенный набор данных по Швейцарии
 help(swiss)
-glimpse(t)
-describe(t)
-ggpairs(t) # все диаграммы рассеяния на одном графике
+glimpse(h)
+describe(h)
+ggpairs(h) # все диаграммы рассеяния на одном графике
 
 # множественная регрессия
-model2 <- lm(data=t,
+model2 <- lm(data=h,
              Fertility~Agriculture+Education+Catholic)
 coef(model2) # оценки бет
 fitted(model2) # прогнозы
@@ -84,3 +85,44 @@ nd2 <- data.frame(Agriculture=0.5,Catholic=0.5,
                   Education=20)
 # прогнозируем
 predict(model2,nd2)
+
+########################
+########################
+
+library("lmtest") # тестирование гипотез в линейных моделях
+library("sjPlot") # графики
+
+# посмотрим результаты оценивания
+summary(model2)
+
+# отдельно табличка с тестами
+coeftest(model2)
+
+confint(model2) # доверительные интервалы для коэффициентов
+sjp.lm(model2) # графическое представление интервалов
+
+# проверка гипотезы b_Cath=b_Agri
+# построение вспомогательной модели
+model_aux <- lm(data=h, Fertility~Catholic+I(Catholic+Agriculture)+Examination)
+summary(model_aux)
+
+# проверка гипотезы без построения вспомогательной модели
+linearHypothesis(model2, "Catholic-Agriculture=0")
+
+# стандартизированные коэффициенты
+
+# масштабируем каждую переменную (вычитаем среднее, делим на стандартную ошибку)
+h_st <- mutate_all(h, "scale")
+glimpse(h_st) # смотрим на новый набор данных
+# оцениваем модель по стандартизированным данным
+model_st <- lm(data=h_st, Fertility~Catholic+Agriculture+Examination)
+summary(model_st) # отчет о новой модели
+
+# графическое представление стандартизованных коэффициентов
+sjp.lm(model2, type = "std") 
+
+library("memisc") # две и более регрессий в одной табличке
+# сравниваем несколько моделей
+model3 <- lm(data=h, Fertility~Catholic+Agriculture)
+compar_12 <- mtable(model2, model3)
+compar_12
